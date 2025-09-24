@@ -1,0 +1,25 @@
+{
+  "name": "vehicle-fleet-service-app",
+  "version": "1.0.0",
+  "description": "CPSC 449",
+  "keywords": [
+    "web",
+    "javascript",
+    "react"
+  ],
+  "homepage": "https://github.com/julianespi/vehicle-fleet-service-app#readme",
+  "bugs": {
+    "url": "https://github.com/julianespi/vehicle-fleet-service-app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/julianespi/vehicle-fleet-service-app.git"
+  },
+  "license": "ISC",
+  "author": "Jason Guan, Julian Espinoza, Mark Ohlwine",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  }
+}
