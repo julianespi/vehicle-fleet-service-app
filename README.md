@@ -25,3 +25,12 @@ cd frontend
 npm install
 ```
 
+To run frontend
+```
+npm run dev
+```
+
+To run backend
+```
+flask run
+```
