@@ -10,9 +10,11 @@ export default function Home() {
       <p className="text-lg text-gray-600 max-w-xl mb-8">
         Monitor your vehicles in real time, track usage, and optimize your fleet with ease.
       </p>
-      <button className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition">
-        Get Started
-      </button>
+      <Link to="/fleetStatus">
+        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition">
+          Get Started
+        </button>
+      </Link>
     </div>
   )
 }
