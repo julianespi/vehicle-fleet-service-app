@@ -25,12 +25,12 @@ cd frontend
 npm install
 ```
 
-To run frontend
+To run frontend, cd to the frontend directory first.
 ```
 npm run dev
 ```
 
-To run backend
+To run backend, cd to the backend directory first (on a separate terminal window from the frontend).
 ```
 flask run
 ```
