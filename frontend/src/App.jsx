@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import FleetStatus from './fleetStatus.jsx'
+import Home from './Home.jsx'
+import About from './AboutUs.jsx'
 
 function App() {
 
   return (
     <>
-    <div className="p-10">
-      <h1 className="text-3xl font-bold">Main App</h1>
-      <FleetStatus />
+    <div >
+      <Home />
+      <About />
     </div>
     </>
   )
