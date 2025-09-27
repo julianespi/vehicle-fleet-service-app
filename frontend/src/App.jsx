@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
-import { Home } from './pages/home'
+import Home from './pages/home'
 import FleetStatus from './pages/fleetStatus'
-import { AboutUs } from './pages/aboutUs'
+import AboutUs from './pages/aboutUs'
 import { Layout } from './layout'
 
 function App() {
