@@ -8,7 +8,7 @@ function FleetStatus() {
         <h1 className="text-3xl font-bold mb-6">Fleet Status</h1>
 
         {/* Truck Card */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6 ">
           {/* Top row */}
           <div className="flex justify-between items-center border-b pb-4 mb-4">
             <h2 className="text-xl font-bold">Truck 101</h2>
@@ -37,10 +37,24 @@ function FleetStatus() {
                 <span className="font-medium">150</span>
               </div>
             </div>
-              <div className="h-36 w-full flex items-center justify-center">
+            <div className="h-36 w-full flex items-center justify-center">
                 <img src="\src\assets\truck1.jpg" alt="truck picture" className="max-h-full max-w-full object-contain rounded-lg" />
-              </div>
+            </div>
+              {/* Right Column: Action Buttons */}
+            <div className="flex flex-col gap-3">
+              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                Service Request
+              </button>
+              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                Service History
+              </button>
+              <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                Service Dispute
+              </button>
+            </div>
           </div>
+
+
         </div>
 
                 {/* Truck Card */}
