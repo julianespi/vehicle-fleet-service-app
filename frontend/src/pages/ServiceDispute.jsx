@@ -1,4 +1,45 @@
+import { useState } from 'react'
+
 export default function ServiceDispute() {
+  const [serviceRequestId, setServiceRequestId] = useState('')
+  const [reason, setReason] = useState('')
+  const [preferredResolution, setPreferredResolution] = useState('')
+  const [message, setMessage] = useState(null)
+  const [isError, setIsError] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setMessage(null)
+    setIsError(false)
+
+    try {
+      const res = await fetch('/api/disputes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service_request_id: Number(serviceRequestId),
+          reason,
+          preferred_resolution: preferredResolution || null,
+        }),
+      })
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        throw new Error(errBody.error || 'Failed to submit dispute')
+      }
+
+      await res.json()
+      setMessage('Dispute submitted successfully.')
+      setServiceRequestId('')
+      setReason('')
+      setPreferredResolution('')
+    } catch (err) {
+      console.error(err)
+      setIsError(true)
+      setMessage(err.message || 'There was a problem submitting the dispute.')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
       <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-lg">
@@ -6,56 +47,59 @@ export default function ServiceDispute() {
           Service Dispute Form
         </h1>
 
-        <form className="space-y-6">
-          {/* Truck ID / Name */}
+        {message && (
+          <div
+            className={`mb-4 text-sm text-center px-4 py-2 rounded-lg ${
+              isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+            }`}
+          >
+            {message}
+          </div>
+        )}
+
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Service Request ID */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Truck ID / Name
+              Service Request ID
             </label>
             <input
-              type="text"
-              placeholder="Enter truck ID or name"
+              type="number"
+              value={serviceRequestId}
+              onChange={(e) => setServiceRequestId(e.target.value)}
+              placeholder="e.g., 1"
               className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500"
+              required
             />
           </div>
 
-          {/* Service in Dispute */}
-          <div>
-            <label className="block text-gray-700 font-medium mb-2">
-              Service in Dispute
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., Oil Change on 2025-09-20"
-              className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500"
-            />
-          </div>
-
-          {/* Reason for Dispute */}
+          {/* Reason */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
               Reason for Dispute
             </label>
             <textarea
               rows="4"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
               placeholder="Explain why you are disputing this service..."
               className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500"
-            ></textarea>
+              required
+            />
           </div>
 
           {/* Preferred Resolution */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
-              Preferred Resolution
+              Preferred Resolution (optional)
             </label>
-            <select
+            <input
+              type="text"
+              value={preferredResolution}
+              onChange={(e) => setPreferredResolution(e.target.value)}
+              placeholder="Refund, rework, discount, etc."
               className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-red-500"
-            >
-              <option>Refund</option>
-              <option>Redo Service</option>
-              <option>Credit Toward Future Service</option>
-              <option>Other</option>
-            </select>
+            />
           </div>
 
           {/* Submit Button */}

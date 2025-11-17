@@ -2,7 +2,8 @@
 from flask_restful import Resource
 from flask import request
 from datetime import datetime
-
+from flask_restful import Resource
+from components.models import db
 from components.models import Truck, ServiceRequest, Technician, ServiceDispute, ServiceHistory
 
 
@@ -46,6 +47,37 @@ def service_request_to_dict(req: ServiceRequest):
 class HelloResource(Resource):
     def get(self):
         return {"message": "Hello World, from Flask!"}, 200
+    
+class TruckResource(Resource):
+    """
+    GET / DELETE / PATCH for a single truck resource.
+    We'll implement only DELETE here (and return basic GET support).
+    """
+    def get(self, truck_id):
+        truck = Truck.query.get(truck_id)
+        if not truck:
+            return {"error": "Truck not found"}, 404
+        # minimal serializer (you can reuse truck_to_dict if you want)
+        return {
+            "id": truck.id,
+            "name": truck.name,
+            "vin": truck.vin,
+            "make": truck.make,
+            "model": truck.model,
+            "year": truck.year,
+            "status": truck.status,
+            "miles": truck.miles,
+            "fuel_percent": truck.fuel_percent,
+        }, 200
+
+    def delete(self, truck_id):
+        truck = Truck.query.get(truck_id)
+        if not truck:
+            return {"error": "Truck not found"}, 404
+
+        db.session.delete(truck)
+        db.session.commit()
+        return {"message": "Truck deleted"}, 200
 
 
 class TruckListResource(Resource):
@@ -75,7 +107,6 @@ class TruckListResource(Resource):
         except KeyError as e:
             return {"error": f"Missing required field: {e.args[0]}"}, 400
 
-        from models import db
         db.session.add(truck)
         db.session.commit()
         return truck_to_dict(truck), 201
@@ -108,7 +139,6 @@ class ServiceRequestListResource(Resource):
             preferred_date=preferred_date,
         )
 
-        from models import db
         db.session.add(req)
         db.session.commit()
         return service_request_to_dict(req), 201
@@ -136,7 +166,28 @@ class ServiceDisputeListResource(Resource):
             preferred_resolution=data.get("preferred_resolution"),
         )
 
-        from models import db
         db.session.add(dispute)
         db.session.commit()
         return {"id": dispute.id}, 201
+    
+    class TruckCreateResource(Resource):
+        def post(self):
+            data = request.get_json()
+
+            truck = Truck(
+                name=data["name"],
+                vin=data["vin"],
+                make=data.get("make"),
+                model=data.get("model"),
+                year=data.get("year"),
+                status=data.get("status", "Active"),
+                miles=data.get("miles", 0),
+                fuel_percent=data.get("fuel_percent", 0),
+                engine_status=data.get("engine_status", "Good"),
+                battery_status=data.get("battery_status", "Normal"),
+            )
+
+            db.session.add(truck)
+            db.session.commit()
+            return {"message": "Truck created", "id": truck.id}, 201
+
