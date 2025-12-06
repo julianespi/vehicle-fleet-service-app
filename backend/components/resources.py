@@ -51,24 +51,12 @@ class HelloResource(Resource):
 class TruckResource(Resource):
     """
     GET / DELETE / PATCH for a single truck resource.
-    We'll implement only DELETE here (and return basic GET support).
     """
     def get(self, truck_id):
         truck = Truck.query.get(truck_id)
         if not truck:
             return {"error": "Truck not found"}, 404
-        # minimal serializer (you can reuse truck_to_dict if you want)
-        return {
-            "id": truck.id,
-            "name": truck.name,
-            "vin": truck.vin,
-            "make": truck.make,
-            "model": truck.model,
-            "year": truck.year,
-            "status": truck.status,
-            "miles": truck.miles,
-            "fuel_percent": truck.fuel_percent,
-        }, 200
+        return truck_to_dict(truck), 200
 
     def delete(self, truck_id):
         truck = Truck.query.get(truck_id)
@@ -78,6 +66,21 @@ class TruckResource(Resource):
         db.session.delete(truck)
         db.session.commit()
         return {"message": "Truck deleted"}, 200
+
+    def patch(self, truck_id):
+        truck = Truck.query.get(truck_id)
+        if not truck:
+            return {"error": "Truck not found"}, 404
+
+        data = request.get_json() or {}
+
+        # allow tech to update these fields
+        for field in ["status", "miles", "fuel_percent", "engine_status", "battery_status"]:
+            if field in data:
+                setattr(truck, field, data[field])
+
+        db.session.commit()
+        return truck_to_dict(truck), 200
 
 
 class TruckListResource(Resource):
