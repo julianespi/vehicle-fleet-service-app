@@ -1,7 +1,8 @@
 // frontend/src/pages/fleetStatus.jsx
 import React, { useEffect, useState } from "react";
 import TruckCard from "../components/TruckCard";
-import AddTruckModal from "../components/AddTruckModal";
+import AddTruckModal from "../Modals/AddTruckModal";
+import AddDriverModal from "../Modals/AddDriverModal";
 
 function FleetStatus() {
   const [trucks, setTrucks] = useState([]);
@@ -9,7 +10,8 @@ function FleetStatus() {
   const [error, setError] = useState(null);
 
   // modal state
-  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAddTruckOpen, setIsAddTruckOpen] = useState(false);
+  const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
 
   const fetchTrucks = async () => {
     setLoading(true);
@@ -18,9 +20,10 @@ function FleetStatus() {
       const res = await fetch("/api/trucks");
       if (!res.ok) throw new Error("Failed to load trucks");
       const data = await res.json();
-      setTrucks(data);
+      setTrucks(data || []);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.message || "Could not load trucks.");
     } finally {
       setLoading(false);
     }
@@ -34,52 +37,78 @@ function FleetStatus() {
     if (!window.confirm("Are you sure you want to delete this truck?")) return;
 
     try {
-      const res = await fetch(`/api/trucks/${truckId}`, { method: "DELETE" });
+      const res = await fetch(`/api/trucks/${truckId}`, {
+        method: "DELETE",
+      });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to delete truck");
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to delete truck");
       }
+
       setTrucks((prev) => prev.filter((t) => t.id !== truckId));
     } catch (err) {
-      alert(`Could not delete truck: ${err.message}`);
+      console.error(err);
+      alert(err.message || "Could not delete truck.");
     }
   };
 
-  // called by modal when a truck is created
-  const handleTruckCreated = (created) => {
-    // If backend returns the full truck object, use it; otherwise re-fetch list
-    if (created && created.id) {
-      // in case created doesn't contain full fields, refresh from server instead:
-      // fetchTrucks()
-      setTrucks((prev) => [created, ...prev]);
+  const handleTruckCreated = (truck) => {
+    // If backend returns the created truck, we can add it
+    if (truck && truck.id) {
+      setTrucks((prev) => [...prev, truck]);
     } else {
+      // otherwise just refetch
       fetchTrucks();
     }
   };
 
-  return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Fleet Status</h1>
+  const handleDriverCreated = () => {
+    // For now we don't need to track drivers here,
+    // the checkout modal fetches them directly from the API.
+    // This is just a hook if you want a toast/refetch later.
+    console.log("Driver created");
+  };
 
-        <div className="flex items-center gap-3">
-          {/* Add Truck button opens modal */}
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Fleet Status</h1>
+          <p className="text-sm text-gray-600">
+            View trucks, assign drivers, and manage availability.
+          </p>
+        </div>
+
+        <div className="flex gap-2">
           <button
-            onClick={() => setIsAddOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            onClick={() => setIsAddTruckOpen(true)}
+            className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700"
           >
-            + Add Truck
+            Add Truck
+          </button>
+
+          <button
+            onClick={() => setIsAddDriverOpen(true)}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
+          >
+            Add Driver
           </button>
         </div>
       </div>
 
-      {loading && <p className="text-gray-600">Loading trucks...</p>}
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {/* Error / loading */}
+      {error && (
+        <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+          {error}
+        </div>
+      )}
+      {loading && (
+        <p className="text-gray-600 mb-4">Loading trucks...</p>
+      )}
 
-     <div
-        className="grid gap-4"
-        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(600px, 100%), 1fr))' }}
-      >
+      {/* Truck list */}
+      <div className="flex flex-wrap gap-4">
         {trucks.map((truck) => (
           <TruckCard
             key={truck.id}
@@ -93,10 +122,17 @@ function FleetStatus() {
         )}
       </div>
 
+      {/* Modals */}
       <AddTruckModal
-        isOpen={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
+        isOpen={isAddTruckOpen}
+        onClose={() => setIsAddTruckOpen(false)}
         onCreated={handleTruckCreated}
+      />
+
+      <AddDriverModal
+        isOpen={isAddDriverOpen}
+        onClose={() => setIsAddDriverOpen(false)}
+        onCreated={handleDriverCreated}
       />
     </div>
   );

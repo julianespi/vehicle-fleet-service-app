@@ -7,10 +7,14 @@ from components.models import db, Truck
 from components.resources import (
     HelloResource,
     TruckListResource,
-    TruckResource, 
+    TruckResource,
     ServiceRequestListResource,
+    ServiceRequestResource,
     TechnicianWorkOrdersResource,
     ServiceDisputeListResource,
+    TruckServiceHistoryResource,
+    DriverListResource,
+    DriverResource,
 )
 
 app = Flask(__name__)
@@ -33,6 +37,13 @@ api.add_resource(
     "/api/technicians/<int:tech_id>/work-orders",
 )
 api.add_resource(ServiceDisputeListResource, "/api/disputes")
+api.add_resource(ServiceRequestResource, "/api/service-requests/<int:request_id>")
+api.add_resource(
+    TruckServiceHistoryResource,
+    "/api/trucks/<int:truck_id>/service-history",
+)
+api.add_resource(DriverListResource, "/api/drivers")
+api.add_resource(DriverResource, "/api/drivers/<int:driver_id>")
 
 
 @app.route("/")

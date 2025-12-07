@@ -139,6 +139,7 @@ export default function ServiceRequest() {
               <option>Engine Check</option>
               <option>Battery Replacement</option>
               <option>Transmission Service</option>
+              <option>Initial Inspection</option>
             </select>
           </div>
 

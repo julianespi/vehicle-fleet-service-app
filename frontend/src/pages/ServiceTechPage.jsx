@@ -9,13 +9,13 @@ export default function Technician() {
   useEffect(() => {
     const fetchWorkOrders = async () => {
       try {
-        const res = await fetch('/api/service-requests?status=Pending')
-        if (!res.ok) throw new Error('Failed to load work orders')
+        const res = await fetch("/api/service-requests?status=Pending")
+        if (!res.ok) throw new Error("Failed to load work orders")
         const data = await res.json()
         setWorkOrders(data)
       } catch (err) {
         console.error(err)
-        setError(err.message)
+        setError(err.message || "Failed to load work orders")
       } finally {
         setLoading(false)
       }
@@ -24,13 +24,17 @@ export default function Technician() {
     fetchWorkOrders()
   }, [])
 
+  const handleJobCompleted = (orderId) => {
+    setWorkOrders((prev) => prev.filter((o) => o.id !== orderId))
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-12">
-      <h1 className="text-4xl font-bold mb-8 text-gray-800">
+    <div className="min-h-screen bg-gray-50 p-8">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">
         Technician Work Orders
       </h1>
 
-      {loading && <p className="text-gray-600">Loading work orders...</p>}
+      {loading && <p>Loading work orders...</p>}
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
       {!loading && workOrders.length === 0 && !error && (
@@ -38,8 +42,12 @@ export default function Technician() {
       )}
 
       <div className="flex flex-wrap gap-6">
-        {workOrders.map(order => (
-          <WorkOrderCard key={order.id} order={order} />
+        {workOrders.map((order) => (
+          <WorkOrderCard
+            key={order.id}
+            order={order}
+            onJobCompleted={handleJobCompleted}
+          />
         ))}
       </div>
     </div>

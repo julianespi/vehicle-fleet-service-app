@@ -11,21 +11,28 @@ class Truck(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable=False)          # "Truck 101"
     vin = db.Column(db.String(50), unique=True, nullable=False)  # Vehicle Identification Number
-    make = db.Column(db.String(50))                           # "Ford"
-    model = db.Column(db.String(50))                          # "F-150"
-    year = db.Column(db.Integer)                              # 2020
-    status = db.Column(db.String(20), default="Active")      # Active / Inactive
+    make = db.Column(db.String(50))                          # "Ford"
+    model = db.Column(db.String(50))                         # "F-150"
+    year = db.Column(db.Integer)                             # 2020
+    status = db.Column(db.String(20), default="Active")      # Active / Inactive / In Shop / On Road
     miles = db.Column(db.Integer, default=0)
     fuel_percent = db.Column(db.Integer, default=0)
     engine_status = db.Column(db.String(50), default="Good")
     battery_status = db.Column(db.String(50), default="Normal")
 
+    # last usage info
     last_driver = db.Column(db.String(80))
     last_driven_date = db.Column(db.Date)
     last_miles_driven = db.Column(db.Integer)
 
+    # NEW: assignment to a driver (one driver per truck max)
+    driver_id = db.Column(db.Integer, db.ForeignKey("driver.id"), nullable=True)
+    driver = db.relationship("Driver", backref="assigned_truck", uselist=False)
+
+    # relationships to other tables (keep your existing ones)
     service_requests = db.relationship("ServiceRequest", backref="truck", lazy=True)
     service_history = db.relationship("ServiceHistory", backref="truck", lazy=True)
+
 
 class Driver(db.Model):
     __tablename__ = "driver"
@@ -36,6 +43,10 @@ class Driver(db.Model):
     address = db.Column(db.String(200))
     phone_number = db.Column(db.String(20))
     email = db.Column(db.String(120), unique=True, nullable=False)
+
+    # NEW: availability + current truck (no FK here to avoid ambiguity)
+    is_available = db.Column(db.Boolean, default=True)
+    current_truck_id = db.Column(db.Integer, nullable=True)
 
 
 class Technician(db.Model):
