@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 export default function ServiceRequest() {
   const location = useLocation()
@@ -14,6 +14,8 @@ export default function ServiceRequest() {
   // extra: show truck summary (name / vin / year make model)
   const [truck, setTruck] = useState(null)
   const [truckFromQuery, setTruckFromQuery] = useState(false)
+
+  const navigate = useNavigate();
 
   // Read truckId from ?truckId=... when coming from FleetStatus
   useEffect(() => {
@@ -38,40 +40,41 @@ export default function ServiceRequest() {
   }, [location.search])
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setMessage(null)
-    setIsError(false)
+    e.preventDefault();
+    setMessage(null);
+    setIsError(false);
 
     try {
-      const res = await fetch('/api/service-requests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/service-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           truck_id: Number(truckId),
           service_type: serviceType,
           description,
-          // HTML date input gives "YYYY-MM-DD"
           preferred_date: preferredDate || null,
         }),
-      })
+      });
 
       if (!res.ok) {
-        const errBody = await res.json().catch(() => ({}))
-        throw new Error(errBody.error || 'Failed to submit request')
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "Failed to submit request");
       }
 
-      await res.json()
-      setMessage('Service request submitted successfully!')
-      if (!truckFromQuery) setTruckId('') // if came from fleet, keep the truck locked
-      setDescription('')
-      setPreferredDate('')
-      setServiceType('Oil Change')
+      await res.json();
+      setMessage("Service request submitted successfully!");
+
+      // 🟢 Automatically return to Fleet Manager
+      setTimeout(() => {
+        navigate("/fleetStatus");
+      }, 800);
     } catch (err) {
-      console.error(err)
-      setIsError(true)
-      setMessage(err.message || 'There was a problem submitting the request.')
+      console.error(err);
+      setIsError(true);
+      setMessage(err.message || "There was a problem submitting the request.");
     }
   }
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">

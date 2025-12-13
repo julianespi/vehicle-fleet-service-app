@@ -3,10 +3,15 @@ import React, { useEffect, useState } from "react";
 import TruckCard from "../components/TruckCard";
 import AddTruckModal from "../Modals/AddTruckModal";
 import AddDriverModal from "../Modals/AddDriverModal";
+import DriverCard from "../components/DriverCard";
 
 function FleetStatus() {
   const [trucks, setTrucks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [drivers, setDrivers] = useState([]);
+
+  const [loadingTrucks, setLoadingTrucks] = useState(true);
+  const [loadingDrivers, setLoadingDrivers] = useState(true);
+
   const [error, setError] = useState(null);
 
   // modal state
@@ -14,7 +19,7 @@ function FleetStatus() {
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
 
   const fetchTrucks = async () => {
-    setLoading(true);
+    setLoadingTrucks(true);
     setError(null);
     try {
       const res = await fetch("/api/trucks");
@@ -25,12 +30,27 @@ function FleetStatus() {
       console.error(err);
       setError(err.message || "Could not load trucks.");
     } finally {
-      setLoading(false);
+      setLoadingTrucks(false);
+    }
+  };
+
+  const fetchDrivers = async () => {
+    setLoadingDrivers(true);
+    try {
+      const res = await fetch("/api/drivers");
+      if (!res.ok) throw new Error("Failed to load drivers");
+      const data = await res.json();
+      setDrivers(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingDrivers(false);
     }
   };
 
   useEffect(() => {
     fetchTrucks();
+    fetchDrivers();
   }, []);
 
   const handleDeleteTruck = async (truckId) => {
@@ -53,21 +73,42 @@ function FleetStatus() {
   };
 
   const handleTruckCreated = (truck) => {
-    // If backend returns the created truck, we can add it
     if (truck && truck.id) {
       setTrucks((prev) => [...prev, truck]);
     } else {
-      // otherwise just refetch
       fetchTrucks();
     }
   };
 
-  const handleDriverCreated = () => {
-    // For now we don't need to track drivers here,
-    // the checkout modal fetches them directly from the API.
-    // This is just a hook if you want a toast/refetch later.
-    console.log("Driver created");
+  const handleDriverCreated = (driver) => {
+    if (driver && driver.id) {
+      setDrivers((prev) => [...prev, driver]);
+    } else {
+      fetchDrivers();
+    }
   };
+
+  const handleDeleteDriver = async (driverId) => {
+    if (!window.confirm("Delete this driver?")) return;
+
+    const res = await fetch(`/api/drivers/${driverId}`, { method: "DELETE" });
+
+    // if backend returns 204, res.json() will fail — so don't parse JSON here
+    if (!res.ok && res.status !== 204) {
+      const body = await res.json().catch(() => ({}));
+      alert(body.error || "Failed to delete driver");
+      return;
+    }
+
+    setDrivers((prev) => prev.filter((d) => d.id !== driverId));
+  };
+
+  const truckLookup = Object.fromEntries(
+  trucks.map((t) => [
+    t.id,
+    t.name ? `${t.name} (${t.vin || "no vin"})` : (t.vin ? `VIN ${t.vin}` : `Truck #${t.id}`)
+  ])
+  );
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -97,29 +138,55 @@ function FleetStatus() {
         </div>
       </div>
 
-      {/* Error / loading */}
+      {/* Error */}
       {error && (
         <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
           {error}
         </div>
       )}
-      {loading && (
-        <p className="text-gray-600 mb-4">Loading trucks...</p>
-      )}
 
-      {/* Truck list */}
-      <div className="flex flex-wrap gap-4">
-        {trucks.map((truck) => (
-          <TruckCard
-            key={truck.id}
-            truck={truck}
-            onDelete={() => handleDeleteTruck(truck.id)}
-          />
-        ))}
+      {/* Layout: Trucks (left) + Drivers (right) */}
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Trucks */}
+        <div className="flex-1">
+          {loadingTrucks && <p className="text-gray-600 mb-4">Loading trucks...</p>}
 
-        {!loading && trucks.length === 0 && (
-          <p className="text-gray-600">No trucks yet.</p>
-        )}
+          <div className="flex flex-wrap gap-4">
+            {trucks.map((truck) => (
+              <TruckCard
+                key={truck.id}
+                truck={truck}
+                onDelete={() => handleDeleteTruck(truck.id)}
+              />
+            ))}
+
+            {!loadingTrucks && trucks.length === 0 && (
+              <p className="text-gray-600">No trucks yet.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Drivers */}
+        <div className="w-full lg:w-[420px]">
+          <h2 className="text-xl font-bold mb-3">Active Drivers</h2>
+
+          {loadingDrivers && <p className="text-gray-600 mb-4">Loading drivers...</p>}
+
+          <div className="flex flex-wrap gap-4">
+            {drivers.map((driver) => (
+              <DriverCard
+                key={driver.id}
+                driver={driver}
+                onDelete={handleDeleteDriver}
+                truckLookup={truckLookup}
+              />
+            ))}
+
+            {!loadingDrivers && drivers.length === 0 && (
+              <p className="text-gray-600">No drivers yet.</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Modals */}

@@ -100,3 +100,20 @@ class ServiceDispute(db.Model):
     reason = db.Column(db.Text, nullable=False)
     preferred_resolution = db.Column(db.String(80))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class CheckInOutHistory(db.Model):
+    __tablename__ = "check_in_out_history"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    truck_id = db.Column(db.Integer, db.ForeignKey("truck.id"), nullable=False)
+    driver_id = db.Column(db.Integer, db.ForeignKey("driver.id"), nullable=False)
+
+    checked_out_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    checked_in_at = db.Column(db.DateTime, nullable=True)
+
+    start_miles = db.Column(db.Integer, nullable=True)
+    end_miles = db.Column(db.Integer, nullable=True)
+
+    truck = db.relationship("Truck")
+    driver = db.relationship("Driver")

@@ -11,6 +11,7 @@ from components.models import (
     ServiceDispute,
     ServiceHistory,
     Driver,
+    CheckInOutHistory,
 )
 
 # ---------- Serializers (model -> dict) ----------
@@ -88,6 +89,20 @@ def service_request_history_to_dict(req: ServiceRequest):
         if getattr(req, "technician", None)
         else None,
         "created_at": req.created_at.isoformat() if req.created_at else None,
+    }
+
+def checkinout_to_dict(row: CheckInOutHistory):
+    return {
+        "id": row.id,
+        "truck_id": row.truck_id,
+        "truck_name": row.truck.name if row.truck else None,
+        "driver_id": row.driver_id,
+        "driver_name": row.driver.name if row.driver else None,
+        "driver_email": row.driver.email if row.driver else None,
+        "checked_out_at": row.checked_out_at.isoformat() if row.checked_out_at else None,
+        "checked_in_at": row.checked_in_at.isoformat() if row.checked_in_at else None,
+        "start_miles": row.start_miles,
+        "end_miles": row.end_miles,
     }
 
 
@@ -168,10 +183,34 @@ class TruckResource(Resource):
                 driver.is_available = False
                 driver.current_truck_id = truck.id
 
+                # NEW: create an "open" trip row (no checked_in_at yet)
+                trip = CheckInOutHistory(
+                    truck_id=truck.id,
+                    driver_id=driver.id,
+                    checked_out_at=datetime.utcnow(),
+                    start_miles=truck.miles,
+                )
+                db.session.add(trip)
+
             # DRIVER CHECK-IN (On Road -> Active)
             elif new_status == "Active":
-                if truck.driver_id:
-                    driver = Driver.query.get(truck.driver_id)
+                # capture driver before clearing
+                prev_driver_id = truck.driver_id
+
+                # NEW: close the most recent open trip for this truck/driver
+                if prev_driver_id:
+                    trip = (
+                        CheckInOutHistory.query
+                        .filter_by(truck_id=truck.id, driver_id=prev_driver_id, checked_in_at=None)
+                        .order_by(CheckInOutHistory.checked_out_at.desc())
+                        .first()
+                    )
+                    if trip:
+                        trip.checked_in_at = datetime.utcnow()
+                        trip.end_miles = truck.miles
+
+                if prev_driver_id:
+                    driver = Driver.query.get(prev_driver_id)
                     if driver:
                         driver.is_available = True
                         driver.current_truck_id = None
@@ -335,7 +374,6 @@ class TruckServiceHistoryResource(Resource):
 
 # ---------- DRIVER RESOURCES ----------
 
-
 class DriverListResource(Resource):
     # GET /api/drivers?available=true
     def get(self):
@@ -381,3 +419,23 @@ class DriverResource(Resource):
 
         db.session.commit()
         return driver_to_dict(driver), 200
+
+class CheckInOutHistoryListResource(Resource):
+    # GET /api/checkinout-history?truckId=1&completed=true
+    def get(self):
+        truck_id = request.args.get("truckId", type=int)
+        driver_id = request.args.get("driverId", type=int)
+        completed = request.args.get("completed", "true")
+
+        q = CheckInOutHistory.query
+
+        if truck_id is not None:
+            q = q.filter_by(truck_id=truck_id)
+        if driver_id is not None:
+            q = q.filter_by(driver_id=driver_id)
+
+        if completed == "true":
+            q = q.filter(CheckInOutHistory.checked_in_at.isnot(None))
+
+        rows = q.order_by(CheckInOutHistory.checked_out_at.desc()).all()
+        return [checkinout_to_dict(r) for r in rows], 200

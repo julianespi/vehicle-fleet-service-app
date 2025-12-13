@@ -15,6 +15,7 @@ from components.resources import (
     TruckServiceHistoryResource,
     DriverListResource,
     DriverResource,
+    CheckInOutHistoryListResource
 )
 
 app = Flask(__name__)
@@ -44,6 +45,7 @@ api.add_resource(
 )
 api.add_resource(DriverListResource, "/api/drivers")
 api.add_resource(DriverResource, "/api/drivers/<int:driver_id>")
+api.add_resource(CheckInOutHistoryListResource, "/api/checkinout-history")
 
 
 @app.route("/")

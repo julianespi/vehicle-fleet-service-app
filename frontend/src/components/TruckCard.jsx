@@ -1,6 +1,6 @@
 // frontend/src/components/TruckCard.jsx
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import DriverCheckoutModal from "../Modals/DriverCheckoutModal";
 
 export default function TruckCard({ truck, onDelete }) {
@@ -26,6 +26,8 @@ export default function TruckCard({ truck, onDelete }) {
   );
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [isDriverModalOpen, setIsDriverModalOpen] = useState(false);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     setCurrentStatus(status || "Unknown");
@@ -178,8 +180,27 @@ export default function TruckCard({ truck, onDelete }) {
             {/* ACTION BUTTONS */}
             <div className="flex gap-2">
               <Link to={`/service-request?truckId=${id}`}>
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                  New Service Request
+                {/* SERVICE REQUEST BUTTON */}
+                <button
+                  disabled={isOnRoad || currentStatus === "In Shop"}
+                  className={`
+                    px-4 py-2 rounded-lg text-white transition
+                    ${
+                      isOnRoad || currentStatus === "In Shop"
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-green-600 hover:bg-green-700"
+                    }
+                  `}
+                  onClick={() => {
+                    if (isOnRoad || currentStatus === "In Shop") return;
+                    navigate(`/service-request?truckId=${id}`);
+                  }}
+                >
+                  {isOnRoad
+                    ? "Unavailable (On Road)"
+                    : currentStatus === "In Shop"
+                    ? "Already In Shop"
+                    : "New Service Request"}
                 </button>
               </Link>
 

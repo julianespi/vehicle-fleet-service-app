@@ -6,31 +6,27 @@ Setup instructions: Open terminal and cd to vehicle-test-service-app
 
 
 
-Set up the virtual environment
+Set up the virtual environment in two terminals 
 
 ```
 python -m venv venv
 
 venv\\Scripts\\activate     # If on Windows
 source venv/bin/activate  # If on Linux/Mac
+source venv/Scripts/activate # bash
 ```
 
-
-
+```
+in one backend terminal
 Install required dependencies
-
-```
-pip install -r backend/requirements.txt
-cd frontend
-npm install
-```
-
-To run frontend, cd to the frontend directory first.
-```
-npm run dev
-```
-
-To run backend, cd to the backend directory first (on a separate terminal window from the frontend).
-```
+cd backend/
+pip install -r requirements.txt
 flask run
+```
+
+``
+in one frontend terminal
+cd frontend/
+npm install
+npm run dev
 ```
